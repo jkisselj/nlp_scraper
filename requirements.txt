@@ -1,0 +1,10 @@
+requests
+beautifulsoup4
+pandas
+scikit-learn
+matplotlib
+spacy
+nltk
+sentence-transformers
+python-dateutil
+joblib
