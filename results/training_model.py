@@ -46,13 +46,15 @@ def main():
     ])
 
     # ==== Пытаемся построить learning curve ====
-    # если данных мало — просто пропускаем
+       # ==== Пытаемся построить learning curve ====
     class_counts = y_train.value_counts()
     min_class_count = class_counts.min()
 
-    plotted = False
-    if min_class_count >= 2 and len(X_train) >= 3:
-        n_splits = max(2, min(5, int(min_class_count)))
+    # если данных мало, просто пропускаем
+    if len(X_train) < 50 or min_class_count < 5:
+        print("Dataset is small, skipping learning curve.")
+    else:
+        n_splits = 5
         cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 
         train_sizes, train_scores, test_scores = learning_curve(
@@ -61,7 +63,7 @@ def main():
             y_train,
             cv=cv,
             scoring="accuracy",
-            train_sizes=[1.0] if len(X_train) < 20 else [0.1, 0.3, 0.5, 0.7, 1.0],
+            train_sizes=[0.2, 0.4, 0.6, 0.8, 1.0],
             n_jobs=-1
         )
 
@@ -79,9 +81,7 @@ def main():
         plt.tight_layout()
         plt.savefig(os.path.join(RESULTS_DIR, "learning_curves.png"))
         print("Learning curves saved to results/learning_curves.png")
-        plotted = True
-    else:
-        print("Not enough data per class to plot learning curve. Skipping plot.")
+
 
     # ==== Обучаем финальную модель ====
     pipeline.fit(X_train, y_train)
@@ -95,8 +95,7 @@ def main():
     joblib.dump(pipeline, model_path)
     print(f"Model saved to {model_path}")
 
-    if not plotted:
-        print("NOTE: when you have a bigger dataset, re-run to generate learning_curves.png")
+
 
 
 if __name__ == "__main__":
