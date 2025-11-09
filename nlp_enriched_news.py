@@ -97,24 +97,26 @@ def main():
         body = art.get("body", "")
         full_text = f"{head}\n{body}"
 
-        print(f"\nEnriching {url}:")
+        # аккуратный вывод
+        print(f"\n[{len(rows)+1}/{len(articles)}] Processing: {head[:70]}...")
 
         # entities
         orgs = detect_orgs(nlp, full_text)
-        print(f"  ORG detected: {orgs}")
+        short_orgs = ", ".join(orgs[:3]) + ("..." if len(orgs) > 3 else "")
 
         # topic
         topic = topic_clf.predict([full_text])[0]
-        print(f"  Topic: {topic}")
 
         # sentiment
         sentiment = detect_sentiment(sia, full_text)
-        print(f"  Sentiment: {sentiment}")
 
         # scandal
         scandal_distance = compute_scandal_score(st_model, full_text, orgs)
-        print(f"  Scandal distance: {scandal_distance}")
 
+        print(f"   ORGs: {short_orgs or '-'}")
+        print(f"   Topic: {topic} | Sentiment: {sentiment:.2f} | Scandal: {scandal_distance:.2f}")
+
+        # сохраняем строку
         rows.append({
             "uuid": art["id"],
             "URL": url,
@@ -127,8 +129,8 @@ def main():
             "Scandal_distance": scandal_distance,
         })
 
+    # после цикла
     df = pd.DataFrame(rows)
-    # top 10 по скандалам
     df = df.sort_values("Scandal_distance", ascending=False)
     df["Top_10"] = False
     df.loc[df.index[:10], "Top_10"] = True
@@ -136,6 +138,7 @@ def main():
     out_csv = os.path.join(RESULTS_DIR, "enhanced_news.csv")
     df.to_csv(out_csv, index=False)
     print(f"\nSaved enriched data to {out_csv}")
+
 
 
 if __name__ == "__main__":
